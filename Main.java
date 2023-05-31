@@ -71,8 +71,7 @@ class DosyaTipiBelirleme {
             File[] docDosyalar = kaynakKlasor.listFiles();
             if(docDosyalar!=null) {
                 for (File docDosyaDizisi : docDosyalar) {
-                    if (docDosyaDizisi.isFile() && docDosyaDizisi.getName().endsWith(".docx")) {
-                        //NOT:Bizde .docx yazdığından bu şekilde yaptık ancak farklı olması durumunda buradan ayarlanabilir.
+                    if (docDosyaDizisi.isFile() && docDosyaDizisi.getName().endsWith(".docx") || docDosyaDizisi.getName().endsWith(".doc")) {
                         docDosyaYollari.add(docDosyaDizisi.getAbsolutePath());
                     }
                 }
@@ -184,7 +183,8 @@ class DosyaIslemleri {
         for(String dosyaYolu : gizlenecekDosyaYollari) {
             Path dosyaPath = Paths.get(dosyaYolu);
             Files.setAttribute(dosyaPath, "dos:hidden", true);
-            //setAttribute() methodu ile belirtilen dosya yolunun gizli(hidden) özelliği true yapılarak dosya gizlenir.
+            /*setAttribute() methodu ile belirtilen dosya yolunun gizli(hidden) özelliği true yapılarak dosya gizlenir.
+            Not: Windows'a göre ayarlandı!*/
         }
         System.out.println("Dosya gizleme işlemi başarıyla gerçekleştirildi.");
     }
@@ -344,12 +344,16 @@ public class Main extends JFrame implements ActionListener {
         ZipIslemleri zipIslm = new ZipIslemleri();
 
         if (tum.isSelected()) {
+        //isSelected() methodu ile istenen dosya tipinin arayüzde seçilip seçilmediği kontrol edilir.
             secilenDosyalar = tip.tumDosyalar(kaynakDizin);
 
             if (e.getActionCommand().equals("Şifrele")) {
+            //getActionCommand() ve equals() methodları ile istenen işlem butonuna arayüzde tıklanıp tıklanmadığı kontrol edilir.    
                 try {
                     islem.dosyaSifreleme(secilenDosyalar);
                     JOptionPane.showMessageDialog(this, "Tüm Dosyalar Şifrelendi.");
+                    /*JOptionPane sınıfından çağırılan showMessageDialog() methodu ile kullanıcıya işlemin sonuçlandığı
+                    açılan bir mesaj ekranı ile gösterilir.*/
                 } catch (IOException | IllegalBlockSizeException | BadPaddingException |
                          NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException ex) {
                     throw new RuntimeException(ex);
@@ -359,9 +363,14 @@ public class Main extends JFrame implements ActionListener {
             else if (e.getActionCommand().equals("Sıkıştır")) {
                 zipDosyaAdi = JOptionPane.showInputDialog(this,
                         "Oluşturmak istediğiniz zip adını sonuna '.zip' ifadesini ekleyerek giriniz:");
+                /*jOptionPane sınıfından çağırılan showInputDialog() methodu ile arayüzde kullanıcının oluşturmak istediği
+                zipi isimlendirmesi için karşısına bir ekran açar ve kullanıcının girmiş olduğu zip ismini kullanarak zip
+                işlemlerini gerçekleştirir.*/
 
                 if (zipDosyaAdi != null && !zipDosyaAdi.isEmpty()) {
                     zipButtonKontrolTum = true;
+                    /*Zip ismi oluşturulduğunu (yani dosyaların ziplenmek istendiğini) kontrol eder ve eğer zip adı
+                    oluşturulduysa zipButtonKontrol değişkenine true ataması yapar. (Daha sonra dosya taşımada kullanılacaktır.)*/
                     zipIslm.dosyaZipleme(zipDosyaAdi, secilenDosyalar, kaynakDizin);
                     JOptionPane.showMessageDialog(this, "Tüm Dosyalar Sıkıştırıldı");
                 }
@@ -381,11 +390,17 @@ public class Main extends JFrame implements ActionListener {
                     if (hedef.exists() && hedef.isDirectory()) {
 
                         if(zipButtonKontrolTum) {
+                        /*'Taşı' butonuna basıldıktan sonra zipKontrolButton değişkeninin true olup olmadığını kontrol eder.
+                        Eğer true ise zip dosyasını taşır.*/
                             zipIslm.zipTasima(zipDosyaAdi,kaynakDizin,hedefDizin);
-                            JOptionPane.showMessageDialog(this, "Zip dosyası taşıma başarılı!");
+                            islem.dosyaTasima(secilenDosyalar,hedefDizin);
+                            JOptionPane.showMessageDialog(this, "Tüm Dosyaları ve zipi taşıma başarılı!");
                             zipButtonKontrolTum=false;
+                            /*Ziplenmiş dosyayı taşıdıktan zipKontrolButton değişkenine false atanır.
+                            (zipKontrolButton true kalırsa sadece zip dosyasını taşır, ardından başka bir taşıma işlemi yapmaz.)*/
                         }
                         else {
+                            /*Eğer zipKontrolButton değişkeni true değilse yalnızca türü seçilen dosyaları taşır.*/
                             islem.dosyaTasima(secilenDosyalar,hedefDizin);
                             JOptionPane.showMessageDialog(this, "Tüm Dosyaları taşıma başarılı!");
                         }
@@ -440,7 +455,8 @@ public class Main extends JFrame implements ActionListener {
 
                         if(zipButtonKontrolPdf) {
                             zipIslm.zipTasima(zipDosyaAdi,kaynakDizin,hedefDizin);
-                            JOptionPane.showMessageDialog(this, "Zip dosyası taşıma başarılı!");
+                            islem.dosyaTasima(secilenDosyalar,hedefDizin);
+                            JOptionPane.showMessageDialog(this, "PDF Dosyaları ve zipi taşıma başarılı!");
                             zipButtonKontrolPdf=false;
                         }
                         else {
@@ -498,7 +514,8 @@ public class Main extends JFrame implements ActionListener {
 
                         if(zipButtonKontrolDoc) {
                             zipIslm.zipTasima(zipDosyaAdi,kaynakDizin,hedefDizin);
-                            JOptionPane.showMessageDialog(this, "Zip dosyası taşıma başarılı!");
+                            islem.dosyaTasima(secilenDosyalar,hedefDizin);
+                            JOptionPane.showMessageDialog(this, "DOC Dosyaları ve zipi taşıma başarılı!");
                             zipButtonKontrolDoc=false;
                         }
                         else {
@@ -556,7 +573,8 @@ public class Main extends JFrame implements ActionListener {
 
                         if(zipButtonKontrolTxt) {
                             zipIslm.zipTasima(zipDosyaAdi,kaynakDizin,hedefDizin);
-                            JOptionPane.showMessageDialog(this, "Zip dosyası taşıma başarılı!");
+                            islem.dosyaTasima(secilenDosyalar,hedefDizin);
+                            JOptionPane.showMessageDialog(this, "TXT Dosyaları ve zipi taşıma başarılı!");
                             zipButtonKontrolTxt=false;
                         }
                         else {
@@ -613,7 +631,8 @@ public class Main extends JFrame implements ActionListener {
 
                         if(zipButtonKontrolPng) {
                             zipIslm.zipTasima(zipDosyaAdi,kaynakDizin,hedefDizin);
-                            JOptionPane.showMessageDialog(this, "Zip dosyası taşıma başarılı!");
+                            islem.dosyaTasima(secilenDosyalar,hedefDizin);
+                            JOptionPane.showMessageDialog(this, "PNG Dosyaları ve zipi taşıma başarılı!");
                             zipButtonKontrolPng=false;
                         }
                         else {
